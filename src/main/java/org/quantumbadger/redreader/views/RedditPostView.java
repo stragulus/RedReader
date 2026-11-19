@@ -46,6 +46,8 @@ import org.quantumbadger.redreader.fragments.PostListingFragment;
 import org.quantumbadger.redreader.reddit.api.RedditPostActions;
 import org.quantumbadger.redreader.reddit.prepared.InlinePreviewLoader;
 import org.quantumbadger.redreader.reddit.prepared.RedditPreparedPost;
+import org.quantumbadger.redreader.translation.TranslatableText;
+import org.quantumbadger.redreader.translation.TranslationIndicator;
 import org.quantumbadger.redreader.views.liststatus.ErrorView;
 
 import java.util.ArrayList;
@@ -53,13 +55,15 @@ import java.util.Objects;
 
 public final class RedditPostView extends FlingableItemView
 		implements RedditPreparedPost.ThumbnailLoadedCallback,
-		InlinePreviewLoader.Listener {
+		InlinePreviewLoader.Listener,
+		TranslatableText.Listener {
 
 	private final AccessibilityActionManager mAccessibilityActionManager;
 
 	private RedditPreparedPost mPost = null;
 	private final TextView title;
 	private final TextView subtitle;
+	@NonNull private final TextView mTranslationIndicator;
 
 	@NonNull private final ImageView mThumbnailView;
 	@NonNull private final ImageView mOverlayIcon;
@@ -215,6 +219,8 @@ public final class RedditPostView extends FlingableItemView
 
 		title = Objects.requireNonNull(rootView.findViewById(R.id.reddit_post_title));
 		subtitle = Objects.requireNonNull(rootView.findViewById(R.id.reddit_post_subtitle));
+		mTranslationIndicator = Objects.requireNonNull(
+				rootView.findViewById(R.id.reddit_post_translation));
 
 		General.suppressAccessibilityTextChangeEvents(subtitle);
 
@@ -298,6 +304,9 @@ public final class RedditPostView extends FlingableItemView
 		subtitle.setTextSize(
 				TypedValue.COMPLEX_UNIT_PX,
 				subtitle.getTextSize() * subtitleFontScale);
+		mTranslationIndicator.setTextSize(
+				TypedValue.COMPLEX_UNIT_PX,
+				mTranslationIndicator.getTextSize() * subtitleFontScale);
 
 		mLeftFlingPref =
 				PrefsUtility.pref_behaviour_fling_post_left();
@@ -340,7 +349,19 @@ public final class RedditPostView extends FlingableItemView
 
 			resetSwipeState();
 
-			title.setText(newPost.src.getTitle());
+			if(mPost != null) {
+				mPost.getTitleTranslation().removeListener(this);
+			}
+
+			final TranslatableText titleTranslation = newPost.getTitleTranslation();
+			titleTranslation.addListener(this);
+
+			// Only translate titles when they're actually shown. This must happen before
+			// the title is set, as cached results are applied immediately.
+			titleTranslation.requestAutoTranslation();
+
+			title.setText(newPost.getDisplayTitle());
+			TranslationIndicator.bind(mTranslationIndicator, titleTranslation);
 
 			// TextView doesn't request a layout if the new text fits in the same number
 			// of lines at the view's current width, which leaves stale sizes in its
@@ -397,6 +418,22 @@ public final class RedditPostView extends FlingableItemView
 			attachInlinePreview(newPost);
 		}
 
+		updateAppearance();
+	}
+
+	@Override
+	public void onTranslationStateChanged(@NonNull final TranslatableText text) {
+
+		// This view may have been recycled to show a different post since the
+		// translation was requested
+		if(mPost == null || mPost.getTitleTranslation() != text) {
+			text.removeListener(this);
+			return;
+		}
+
+		title.setText(mPost.getDisplayTitle());
+		title.requestLayout(); // See the comment in reset()
+		TranslationIndicator.bind(mTranslationIndicator, text);
 		updateAppearance();
 	}
 

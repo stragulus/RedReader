@@ -37,6 +37,8 @@ import org.quantumbadger.redreader.common.PrefsUtility;
 import org.quantumbadger.redreader.reddit.api.RedditPostActions;
 import org.quantumbadger.redreader.reddit.prepared.RedditChangeDataManager;
 import org.quantumbadger.redreader.reddit.prepared.RedditPreparedPost;
+import org.quantumbadger.redreader.translation.TranslatableText;
+import org.quantumbadger.redreader.translation.TranslationIndicator;
 
 public class RedditPostHeaderView extends LinearLayout {
 
@@ -77,13 +79,32 @@ public class RedditPostHeaderView extends LinearLayout {
 		final TextView title = new TextView(activity);
 		title.setTextSize(19.0f * titleFontScale);
 		title.setTypeface(Fonts.getRobotoLightOrAlternative());
-		title.setText(post.src.getTitle());
-		title.setContentDescription(post.buildAccessibilityTitle(activity, true));
 		title.setTextColor(Color.WHITE);
 		greyHeader.addView(title);
 
 		final float subtitleFontScale =
 				PrefsUtility.appearance_fontscale_post_header_subtitles();
+
+		final TextView translationIndicator = TranslationIndicator.create(
+				activity,
+				Color.rgb(200, 200, 200),
+				12.0f * subtitleFontScale);
+
+		greyHeader.addView(translationIndicator);
+
+		final TranslatableText titleTranslation = post.getTitleTranslation();
+
+		final Runnable updateTitle = () -> {
+			title.setText(post.getDisplayTitle());
+			title.setContentDescription(post.buildAccessibilityTitle(activity, true));
+			TranslationIndicator.bind(translationIndicator, titleTranslation);
+		};
+
+		// The post object has the same lifetime as this view, so the listener is never
+		// removed
+		titleTranslation.addListener(text -> updateTitle.run());
+		titleTranslation.requestAutoTranslation();
+		updateTitle.run();
 
 		subtitle = new TextView(activity);
 		subtitle.setTextSize(13.0f * subtitleFontScale);

@@ -48,12 +48,14 @@ import org.quantumbadger.redreader.reddit.api.RedditPostActions;
 import org.quantumbadger.redreader.reddit.things.InvalidSubredditNameException;
 import org.quantumbadger.redreader.reddit.things.SubredditCanonicalId;
 import org.quantumbadger.redreader.settings.types.AppearanceTheme;
+import org.quantumbadger.redreader.translation.TranslationContentType;
 
 import java.io.File;
 import java.util.ArrayList;
 import java.util.EnumMap;
 import java.util.EnumSet;
 import java.util.HashMap;
+import java.util.HashSet;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Locale;
@@ -173,6 +175,7 @@ public final class PrefsUtility {
 						R.string.pref_accessibility_concise_mode_key))
 				|| key.equals(context.getString(
 						R.string.pref_appearance_post_hide_subreddit_header_key))
+				|| key.startsWith("pref_translation")
 				|| key.equals(REDDIT_USER_AGREEMENT_PREF)
 				|| key.equals(context.getString(R.string.pref_reddit_client_id_override_key));
 	}
@@ -1953,5 +1956,62 @@ public final class PrefsUtility {
 				.edit()
 				.putInt(REDDIT_USER_AGREEMENT_PREF, REDDIT_USER_AGREEMENT_DECLINED)
 				.apply();
+	}
+
+	///////////////////////////////
+	// pref_translation
+	///////////////////////////////
+
+	@NonNull
+	public static String pref_appearance_langforce() {
+		final String result = getString(R.string.pref_appearance_langforce_key, "auto");
+		return result != null ? result : "auto";
+	}
+
+	public static boolean pref_translation_enabled() {
+		return getBoolean(R.string.pref_translation_enabled_key, false);
+	}
+
+	@NonNull
+	public static String pref_translation_primary_language() {
+		final String result = getString(R.string.pref_translation_primary_language_key, "auto");
+		return result != null ? result : "auto";
+	}
+
+	@NonNull
+	public static Set<String> pref_translation_secondary_languages() {
+		final Set<String> result = sharedPrefs.getStringSet(
+				getPrefKey(R.string.pref_translation_secondary_languages_key),
+				null);
+		return result != null ? result : new HashSet<>();
+	}
+
+	@NonNull
+	public static EnumSet<TranslationContentType> pref_translation_content() {
+
+		final Set<String> strings = getStringSet(
+				R.string.pref_translation_content_key,
+				R.array.pref_translation_content_return);
+
+		final EnumSet<TranslationContentType> result
+				= EnumSet.noneOf(TranslationContentType.class);
+
+		for(final String s : strings) {
+			try {
+				result.add(TranslationContentType.valueOf(StringUtils.asciiUppercase(s)));
+			} catch(final IllegalArgumentException e) {
+				Log.e("PrefsUtility", "Unknown translation content type: " + s, e);
+			}
+		}
+
+		return result;
+	}
+
+	public static boolean pref_translation_wifi_only() {
+		return getBoolean(R.string.pref_translation_wifi_only_key, true);
+	}
+
+	public static boolean pref_translation_debug_fake_backend() {
+		return getBoolean(R.string.pref_translation_debug_fake_backend_key, false);
 	}
 }

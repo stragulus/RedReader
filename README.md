@@ -69,9 +69,22 @@ Please see the contribution guidelines in
 Building
 --------
 
+The on-device translation engine (`libs/redreader-translate`) is built from
+source from git submodules, so after cloning, fetch them first:
+
+    git submodule update --init --recursive
+
+(or clone with `git clone --recursive`). Building it needs the Android NDK and
+CMake versions listed in [gradle/libs.versions.toml](gradle/libs.versions.toml),
+which can be installed with the Android SDK manager.
+
 RedReader is built using Gradle. On Linux, simply run:
 
     ./gradlew installDebug
+
+A full native build for all ABIs takes a while. During development, you can
+restrict it to the ABI of your device or emulator, e.g.
+`./gradlew installDebug -PtranslateAbis=x86_64`.
 
 
 License

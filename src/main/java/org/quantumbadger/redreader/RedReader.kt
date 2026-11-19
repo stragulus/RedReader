@@ -34,6 +34,9 @@ import org.quantumbadger.redreader.receivers.NewMessageChecker
 import org.quantumbadger.redreader.receivers.announcements.AnnouncementDownloader
 import org.quantumbadger.redreader.reddit.api.RedditOAuth
 import org.quantumbadger.redreader.reddit.prepared.RedditChangeDataManager
+import org.quantumbadger.redreader.translation.BergamotTranslationBackend
+import org.quantumbadger.redreader.translation.TranslationManager
+import org.quantumbadger.redreader.translation.TranslationModelManager
 
 class RedReader : Application() {
 
@@ -62,6 +65,13 @@ class RedReader : Application() {
 		Fonts.onAppCreate(assets)
 
 		RedditOAuth.init(this)
+
+		// Cheap: the native translation library and the list of installed models are
+		// only loaded when first needed, on a background thread
+		val translationModels = TranslationModelManager.getInstance(this)
+		TranslationManager.setBackend(BergamotTranslationBackend(this, translationModels))
+		TranslationManager.setModelProvider(translationModels)
+		TranslationManager.onAppCreate()
 
 		Log.i(TAG, "Config: " + GlobalConfig.appName + " (" + GlobalConfig.appBuildType + ")")
 

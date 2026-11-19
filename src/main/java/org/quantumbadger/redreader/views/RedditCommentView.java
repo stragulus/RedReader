@@ -48,12 +48,14 @@ import org.quantumbadger.redreader.reddit.kthings.RedditIdAndType;
 import org.quantumbadger.redreader.reddit.prepared.RedditChangeDataManager;
 import org.quantumbadger.redreader.reddit.prepared.RedditParsedComment;
 import org.quantumbadger.redreader.reddit.prepared.RedditRenderableComment;
+import org.quantumbadger.redreader.translation.TranslatableText;
+import org.quantumbadger.redreader.translation.TranslationIndicator;
 
 import java.util.Observer;
 
 
 public class RedditCommentView extends FlingableItemView
-		implements RedditChangeDataManager.Listener {
+		implements RedditChangeDataManager.Listener, TranslatableText.Listener {
 
 	private final AccessibilityActionManager mAccessibilityActionManager;
 
@@ -65,6 +67,7 @@ public class RedditCommentView extends FlingableItemView
 
 	private final TextView mHeader;
 	private final FrameLayout mBodyHolder;
+	private final TextView mTranslationIndicator;
 
 	private final IndentView mIndentView;
 	private final LinearLayout mIndentedContent;
@@ -344,6 +347,7 @@ public class RedditCommentView extends FlingableItemView
 		mHeader = rootView.findViewById(R.id.view_reddit_comment_header);
 		General.suppressAccessibilityTextChangeEvents(mHeader);
 		mBodyHolder = rootView.findViewById(R.id.view_reddit_comment_bodyholder);
+		mTranslationIndicator = rootView.findViewById(R.id.view_reddit_comment_translation);
 		mIndentedContent = rootView.findViewById(R.id.view_reddit_comment_indented_content);
 
 		final int minimumCommentHeight = PrefsUtility.pref_accessibility_min_comment_height();
@@ -372,6 +376,22 @@ public class RedditCommentView extends FlingableItemView
 		reset(mActivity, mComment, true);
 	}
 
+	@Override
+	public void onTranslationStateChanged(@NonNull final TranslatableText text) {
+
+		// This view may have been recycled to show a different comment since the
+		// translation was requested
+		if(mComment == null
+				|| !mComment.isComment()
+				|| mComment.asComment().getTranslation() != text) {
+
+			text.removeListener(this);
+			return;
+		}
+
+		reset(mActivity, mComment, true);
+	}
+
 	public void reset(
 			final BaseActivity activity,
 			final RedditCommentListItem comment) {
@@ -391,9 +411,11 @@ public class RedditCommentView extends FlingableItemView
 			if(mComment != comment) {
 				if(mComment != null) {
 					mChangeDataManager.removeListener(mComment.asComment().getIdAndType(), this);
+					mComment.asComment().getTranslation().removeListener(this);
 				}
 
 				mChangeDataManager.addListener(comment.asComment().getIdAndType(), this);
+				comment.asComment().getTranslation().addListener(this);
 			}
 
 			mComment = comment;
@@ -407,6 +429,16 @@ public class RedditCommentView extends FlingableItemView
 				.getParsedComment()
 				.getRawComment().getAuthor().getDecoded().equalsIgnoreCase(
 						"autowikibot");
+
+		final boolean isCollapsed = mComment.isCollapsed(mChangeDataManager);
+
+		final TranslatableText translation = comment.asComment().getTranslation();
+
+		// Only translate comments when they're actually shown. This must happen
+		// before the body is generated, as cached results are applied immediately.
+		if(!isCollapsed) {
+			translation.requestAutoTranslation();
+		}
 
 		mBodyHolder.removeAllViews();
 		final View commentBody = comment.asComment().getBody(
@@ -433,8 +465,6 @@ public class RedditCommentView extends FlingableItemView
 				? mComment.getParent().asComment().getParsedComment().getRawComment()
 						.getCreated_utc().getValue()
 				: null;
-
-		final boolean isCollapsed = mComment.isCollapsed(mChangeDataManager);
 
 		final BetterSSB header = renderableComment.getHeader(
 				mTheme,
@@ -474,11 +504,13 @@ public class RedditCommentView extends FlingableItemView
 			mHeader.setText("[ + ]  "
 					+ mHeaderText); // Note that this removes formatting (which is fine)
 			mBodyHolder.setVisibility(GONE);
+			TranslationIndicator.bind(mTranslationIndicator, null);
 
 		} else {
 			setFlingingEnabled(true);
 			mHeader.setText(mHeaderText);
 			mBodyHolder.setVisibility(VISIBLE);
+			TranslationIndicator.bind(mTranslationIndicator, translation);
 		}
 
 		setupAccessibilityActions();
@@ -540,6 +572,18 @@ public class RedditCommentView extends FlingableItemView
 
 		addAccessibilityActionFromDescriptionPair(
 				chooseFlingAction(PrefsUtility.CommentFlingAction.SHARE));
+
+		{
+			final TranslatableText translation = mComment.asComment().getTranslation();
+
+			if(translation.isTranslated()) {
+				mAccessibilityActionManager.addAction(
+						translation.isShowingTranslation()
+								? R.string.action_translation_show_original
+								: R.string.action_translation_show_translation,
+						translation::toggleShowingOriginal);
+			}
+		}
 
 		if (isAuthenticated) {
 			addAccessibilityActionFromDescriptionPair(

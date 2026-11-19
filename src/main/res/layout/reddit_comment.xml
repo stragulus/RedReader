@@ -63,6 +63,17 @@
 					android:textColor="?rrCommentHeaderCol"
 					tools:ignore="SmallSp"/>
 
+			<TextView
+					android:id="@+id/view_reddit_comment_translation"
+					android:layout_width="wrap_content"
+					android:layout_height="wrap_content"
+					android:paddingTop="3dp"
+					android:paddingBottom="1dp"
+					android:textSize="11sp"
+					android:textColor="?rrCommentHeaderCol"
+					android:visibility="gone"
+					tools:ignore="SmallSp"/>
+
 			<FrameLayout
 					android:id="@+id/view_reddit_comment_bodyholder"
 					android:layout_width="match_parent"

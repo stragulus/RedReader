@@ -44,6 +44,10 @@
 			android:title="@string/prefs_category_network"/>
 
 	<Preference
+			android:key="@string/prefs_category_translation_key"
+			android:title="@string/prefs_category_translation"/>
+
+	<Preference
 			android:key="@string/prefs_category_menus_key"
 			android:title="@string/prefs_category_menus"/>
 

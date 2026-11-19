@@ -8,6 +8,7 @@ sdk-compile = "36"
 sdk-min = "21"
 sdk-target = "36"
 ndk = "27.3.13750724"
+cmake = "3.22.1"
 
 androidx-activity-compose = "1.11.0"
 androidx-annotation = "1.10.0"

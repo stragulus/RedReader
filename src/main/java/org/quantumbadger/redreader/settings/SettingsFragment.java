@@ -24,6 +24,7 @@ import android.content.Context;
 import android.content.Intent;
 import android.os.Bundle;
 import android.text.Html;
+import android.text.TextUtils;
 import android.util.Log;
 import android.view.View;
 import android.widget.ProgressBar;
@@ -36,7 +37,9 @@ import androidx.appcompat.app.AlertDialog;
 import androidx.fragment.app.FragmentActivity;
 import androidx.preference.CheckBoxPreference;
 import androidx.preference.EditTextPreference;
+import androidx.core.os.ConfigurationCompat;
 import androidx.preference.ListPreference;
+import androidx.preference.MultiSelectListPreference;
 import androidx.preference.Preference;
 import androidx.preference.PreferenceFragmentCompat;
 import androidx.preference.PreferenceGroup;
@@ -51,6 +54,7 @@ import org.quantumbadger.redreader.activities.BaseActivity;
 import org.quantumbadger.redreader.activities.BugReportActivity;
 import org.quantumbadger.redreader.activities.ChangelogActivity;
 import org.quantumbadger.redreader.activities.HtmlViewActivity;
+import org.quantumbadger.redreader.activities.TranslationModelsActivity;
 import org.quantumbadger.redreader.cache.CacheManager;
 import org.quantumbadger.redreader.common.AndroidCommon;
 import org.quantumbadger.redreader.common.Constants;
@@ -66,14 +70,19 @@ import org.quantumbadger.redreader.common.time.TimeDuration;
 import org.quantumbadger.redreader.common.time.TimestampUTC;
 import org.quantumbadger.redreader.receivers.NewMessageChecker;
 import org.quantumbadger.redreader.reddit.prepared.RedditChangeDataManager;
+import org.quantumbadger.redreader.translation.TranslationLanguages;
+import org.quantumbadger.redreader.translation.TranslationManager;
 
 import java.io.File;
+import java.text.Collator;
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.EnumMap;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Locale;
 import java.util.Objects;
+import java.util.Set;
 
 public final class SettingsFragment extends PreferenceFragmentCompat {
 
@@ -166,6 +175,8 @@ public final class SettingsFragment extends PreferenceFragmentCompat {
 
 		addPreferencesFromResource(resource);
 
+		setupTranslationPreferences();
+
 		final int[] listPrefsToUpdate = {
 				R.string.pref_appearance_twopane_key,
 				R.string.pref_behaviour_self_post_tap_actions_key,
@@ -236,7 +247,8 @@ public final class SettingsFragment extends PreferenceFragmentCompat {
 				R.string.pref_appearance_android_status_key,
 				R.string.pref_behaviour_collapse_sticky_comments_key,
 				R.string.pref_behaviour_sharing_domain_key,
-				R.string.pref_behaviour_post_tap_action_key
+				R.string.pref_behaviour_post_tap_action_key,
+				R.string.pref_translation_primary_language_key
 		};
 
 		final int[] editTextPrefsToUpdate = {
@@ -665,6 +677,125 @@ public final class SettingsFragment extends PreferenceFragmentCompat {
 			}
 
 		}
+	}
+
+	private void setupTranslationPreferences() {
+
+		final ListPreference primaryLanguagePref = findPreference(getString(
+				R.string.pref_translation_primary_language_key));
+
+		final MultiSelectListPreference secondaryLanguagesPref = findPreference(getString(
+				R.string.pref_translation_secondary_languages_key));
+
+		final Preference modelsPref = findPreference(getString(
+				R.string.pref_translation_models_key));
+
+		final CheckBoxPreference debugBackendPref = findPreference(getString(
+				R.string.pref_translation_debug_fake_backend_key));
+
+		if(primaryLanguagePref == null
+				|| secondaryLanguagesPref == null
+				|| modelsPref == null
+				|| debugBackendPref == null) {
+			return;
+		}
+
+		final Locale configLocale
+				= ConfigurationCompat.getLocales(getResources().getConfiguration()).get(0);
+		final Locale displayLocale = configLocale != null ? configLocale : Locale.getDefault();
+
+		final Collator collator = Collator.getInstance(displayLocale);
+
+		final ArrayList<String> codes
+				= new ArrayList<>(TranslationLanguages.SUPPORTED_LANGUAGES);
+
+		final HashMap<String, String> names = new HashMap<>();
+
+		for(final String code : codes) {
+			names.put(code, TranslationLanguages.getDisplayName(code, displayLocale));
+		}
+
+		Collections.sort(codes, (a, b) -> collator.compare(names.get(a), names.get(b)));
+
+		final String[] languageNames = new String[codes.size()];
+
+		for(int i = 0; i < codes.size(); i++) {
+			languageNames[i] = names.get(codes.get(i));
+		}
+
+		final String[] languageCodes = codes.toArray(new String[0]);
+
+		{
+			final String[] entries = new String[codes.size() + 1];
+			final String[] values = new String[codes.size() + 1];
+
+			entries[0] = getString(R.string.pref_translation_primary_language_auto);
+			values[0] = TranslationLanguages.PRIMARY_LANGUAGE_AUTO;
+
+			System.arraycopy(languageNames, 0, entries, 1, languageNames.length);
+			System.arraycopy(languageCodes, 0, values, 1, languageCodes.length);
+
+			primaryLanguagePref.setEntries(entries);
+			primaryLanguagePref.setEntryValues(values);
+		}
+
+		secondaryLanguagesPref.setEntries(languageNames);
+		secondaryLanguagesPref.setEntryValues(languageCodes);
+
+		final Runnable updateSecondarySummary = () -> {
+
+			final Set<String> selected = secondaryLanguagesPref.getValues();
+			final ArrayList<String> selectedNames = new ArrayList<>();
+
+			for(final String code : codes) {
+				if(selected.contains(code)) {
+					selectedNames.add(names.get(code));
+				}
+			}
+
+			if(selectedNames.isEmpty()) {
+				secondaryLanguagesPref.setSummary(
+						R.string.pref_translation_secondary_languages_none);
+			} else {
+				secondaryLanguagesPref.setSummary(TextUtils.join(", ", selectedNames));
+			}
+		};
+
+		updateSecondarySummary.run();
+
+		secondaryLanguagesPref.setOnPreferenceChangeListener((preference, newValue) -> {
+			// Run this after the preference has actually changed
+			AndroidCommon.UI_THREAD_HANDLER.post(updateSecondarySummary);
+			return true;
+		});
+
+		final Runnable updateModelsPref = () -> {
+			if(TranslationManager.getInstance().isBackendAvailable()) {
+				modelsPref.setEnabled(true);
+				modelsPref.setSummary(R.string.pref_translation_models_summary);
+			} else {
+				modelsPref.setEnabled(false);
+				modelsPref.setSummary(R.string.pref_translation_unavailable_summary);
+			}
+		};
+
+		updateModelsPref.run();
+
+		modelsPref.setOnPreferenceClickListener(preference -> {
+			startActivity(new Intent(requireContext(), TranslationModelsActivity.class));
+			return true;
+		});
+
+		debugBackendPref.setVisible(BuildConfig.DEBUG);
+
+		debugBackendPref.setOnPreferenceChangeListener((preference, newValue) -> {
+			// Run this after the preference has actually changed
+			AndroidCommon.UI_THREAD_HANDLER.post(() -> {
+				TranslationManager.updateDebugBackend();
+				updateModelsPref.run();
+			});
+			return true;
+		});
 	}
 
 	//Based on https://stackoverflow.com/a/55724743

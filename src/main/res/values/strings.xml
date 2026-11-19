@@ -1996,4 +1996,94 @@
 	<string name="pref_appearance_navbar_opacity_title">Navigation bar opacity</string>
 	<!-- Translators: navigation bar opacity option which picks an opacity based on the navigation bar colour -->
 	<string name="pref_appearance_navbar_opacity_option_auto">Automatic</string>
+
+	<!-- 2026-11-19 -->
+	<string name="prefs_category_translation">Translation</string>
+	<string name="prefs_category_translation_key" translatable="false">prefs_category_translation</string>
+	<string name="pref_translation_enabled_key" translatable="false">pref_translation_enabled</string>
+	<string name="pref_translation_enabled_title">Translate automatically</string>
+	<string name="pref_translation_enabled_summary">Translate text written in other languages into your primary language. Translation happens on your device.</string>
+	<string name="pref_translation_primary_language_key" translatable="false">pref_translation_primary_language</string>
+	<string name="pref_translation_primary_language_title">Primary language</string>
+	<!-- Translators: option for the translation primary language setting, which uses the app's language (or the system language) -->
+	<string name="pref_translation_primary_language_auto">Automatic (app language)</string>
+	<string name="pref_translation_secondary_languages_key" translatable="false">pref_translation_secondary_languages</string>
+	<string name="pref_translation_secondary_languages_title">Other languages I understand</string>
+	<!-- Translators: summary of the secondary languages setting when no languages are selected -->
+	<string name="pref_translation_secondary_languages_none">None</string>
+	<string name="pref_translation_content_key" translatable="false">pref_translation_content</string>
+	<string name="pref_translation_content_title">What to translate automatically</string>
+	<string name="pref_translation_content_titles">Post titles</string>
+	<string name="pref_translation_content_self_text">Self post text</string>
+	<string name="pref_translation_content_comments">Comments</string>
+	<string name="pref_translation_wifi_only_key" translatable="false">pref_translation_wifi_only</string>
+	<string name="pref_translation_wifi_only_title">Only download language models over Wi-Fi</string>
+	<string name="pref_translation_models_key" translatable="false">pref_translation_models</string>
+	<string name="pref_translation_models_title">Manage language models</string>
+	<string name="pref_translation_models_summary">Download or delete the language models used for translation</string>
+	<string name="pref_translation_unavailable_summary">Translation is not available in this version of RedReader</string>
+	<string name="pref_translation_debug_fake_backend_key" translatable="false">pref_translation_debug_fake_backend</string>
+	<string name="pref_translation_debug_fake_backend_title" translatable="false">Use fake translation engine (debug builds only)</string>
+
+	<string name="action_translate">Translate</string>
+	<string name="action_translation_show_original">Show original</string>
+	<string name="action_translation_show_translation">Show translation</string>
+	<!-- Translators: shown below automatically translated text. %1$s is the name of the original language, e.g. "Spanish". -->
+	<string name="translation_indicator_translated">Translated from %1$s</string>
+	<!-- Translators: shown below text which has a translation, while the original is being shown. %1$s is the name of the original language, e.g. "Spanish". -->
+	<string name="translation_indicator_original">Original (%1$s)</string>
+	<string name="translation_in_progress">Translating…</string>
+	<string name="translation_unavailable">Translation is not available</string>
+	<string name="translation_failed">Translation failed</string>
+	<!-- Translators: %1$s and %2$s are language names, e.g. "The language model for Spanish → English is not installed" -->
+	<string name="translation_model_missing">The language model for %1$s → %2$s is not installed</string>
+	<!-- Translators: %1$s is a language name -->
+	<string name="translation_already_in_language">This text is already in %1$s</string>
+	<string name="translation_language_unknown">Could not detect the language of this text</string>
+
+	<!-- Translators: shown below text in a language for which no translation model is installed, after the language name (e.g. "Spanish · Download translation model (27 MB)"). %1$s is the approximate download size, e.g. "27 MB". -->
+	<string name="translation_action_download_model_size">Download translation model (%1$s)</string>
+	<string name="translation_action_download_model">Download translation model</string>
+	<!-- Translators: %1$d is a percentage, e.g. "Downloading translation model… 45%" -->
+	<string name="translation_model_downloading">Downloading translation model… %1$d%%</string>
+	<string name="translation_model_no_connection">No network connection</string>
+	<string name="translation_model_wifi_only">Language models are only downloaded over Wi-Fi. You can change this in the Translation settings.</string>
+	<string name="translation_model_metered_title">Download over a metered connection?</string>
+	<!-- Translators: %1$s is the approximate download size, e.g. "27 MB" -->
+	<string name="translation_model_metered_message">You have chosen to only download language models over Wi-Fi, but you are on a metered connection. The download is about %1$s.</string>
+	<string name="translation_model_download_anyway">Download anyway</string>
+	<!-- Translators: %1$s is a technical error message -->
+	<string name="translation_model_download_failed">Failed to download the language model: %1$s</string>
+	<string name="translation_model_download_failed_generic">Failed to download the language model</string>
+	<!-- Translators: the name of a translation model which covers Bosnian, Croatian, Montenegrin and Serbian -->
+	<string name="translation_language_hbs">Bosnian/Croatian/Serbian</string>
+
+	<string name="translation_models_title">Language models</string>
+	<string name="translation_models_description">Translation happens on your device, using language models from Mozilla (the same models used by Firefox). Each model translates in one direction. Translating between two languages other than English needs two models, as translation goes through English.</string>
+	<string name="translation_models_installed">Installed</string>
+	<string name="translation_models_available">Available</string>
+	<string name="translation_models_loading">Loading the list of language models…</string>
+	<!-- Translators: %1$s is a technical error message -->
+	<string name="translation_models_load_failed">Could not load the list of language models: %1$s</string>
+	<string name="translation_models_retry">Retry</string>
+	<!-- Translators: %1$s and %2$s are language names, e.g. "Spanish → English" -->
+	<string name="translation_models_direction">%1$s → %2$s</string>
+	<!-- Translators: %1$s is a size, e.g. "37 MB" -->
+	<string name="translation_models_installed_size">Installed · %1$s</string>
+	<!-- Translators: %1$s is an approximate size, e.g. "27 MB" -->
+	<string name="translation_models_download_size">Download about %1$s</string>
+	<!-- Translators: %1$d is a percentage -->
+	<string name="translation_models_downloading">Downloading… %1$d%%</string>
+	<string name="translation_models_action_download">Download</string>
+	<string name="translation_models_action_delete">Delete</string>
+	<string name="translation_models_action_cancel">Cancel</string>
+	<!-- Translators: %1$s is the name of a translation model, e.g. "Spanish → English" -->
+	<string name="translation_models_delete_confirm">Delete the %1$s language model?</string>
+	<!-- Translators: shown in the list of language models, for models needed to translate text the user has seen -->
+	<string name="translation_models_needed">Needed for text you have seen</string>
+	<string name="translation_models_show_all">Show all models</string>
+	<!-- Translators: %1$s is the name of the user's primary language, e.g. "German" -->
+	<string name="translation_models_pivot_note">Text in other languages is translated into English first, and then into %1$s, so the English → %1$s model is needed too.</string>
+	<!-- Translators: %1$s is the name of the user's primary language, e.g. "Irish" -->
+	<string name="translation_models_no_target">No language models are available for translating into %1$s.</string>
 </resources>

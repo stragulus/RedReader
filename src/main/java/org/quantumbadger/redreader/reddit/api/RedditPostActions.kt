@@ -64,6 +64,7 @@ import org.quantumbadger.redreader.reddit.things.SubredditCanonicalId
 import org.quantumbadger.redreader.reddit.url.PostCommentListingURL
 import org.quantumbadger.redreader.reddit.url.SubredditPostListURL
 import org.quantumbadger.redreader.reddit.url.UserProfileURL
+import org.quantumbadger.redreader.translation.TranslationManager
 import org.quantumbadger.redreader.views.AccessibilityActionManager
 import org.quantumbadger.redreader.views.RedditPostView.PostSelectionListener
 import org.quantumbadger.redreader.views.bezelmenu.SideToolbarOverlay
@@ -109,7 +110,8 @@ object RedditPostActions {
 		UNPIN(R.string.action_unpin_subreddit),
 		SUBSCRIBE(R.string.action_subscribe_subreddit),
 		UNSUBSCRIBE(R.string.action_unsubscribe_subreddit),
-		CROSSPOST_ORIGIN(R.string.action_crosspost_origin)
+		CROSSPOST_ORIGIN(R.string.action_crosspost_origin),
+		TRANSLATE(R.string.action_translate)
 
 	}
 
@@ -340,6 +342,11 @@ object RedditPostActions {
 		if (isAuthenticated) {
 			addAccessibilityActionFromDescriptionPair(from(post, PostFlingAction.DOWNVOTE))
 			addAccessibilityActionFromDescriptionPair(from(post, PostFlingAction.UPVOTE))
+		}
+		if (TranslationManager.getInstance().isBackendAvailable) {
+			addAccessibilityActionFromDescriptionPair(
+				ActionDescriptionPair(Action.TRANSLATE, post.translateActionLabel)
+			)
 		}
 	}
 
@@ -587,6 +594,7 @@ object RedditPostActions {
 			}
 
 			Action.BACK -> activity.onBackPressedDispatcher.onBackPressed()
+			Action.TRANSLATE -> post.onTranslateAction(activity)
 			Action.PIN -> try {
 				PrefsUtility.pref_pinned_subreddits_add(
 					activity,
@@ -924,6 +932,11 @@ object RedditPostActions {
 					Action.PROPERTIES
 				)
 			)
+		}
+		if (itemPref.contains(Action.TRANSLATE)
+			&& TranslationManager.getInstance().isBackendAvailable
+		) {
+			menu.add(RPVMenuItem(activity, post.translateActionLabel, Action.TRANSLATE))
 		}
 		val menuText = arrayOfNulls<String>(menu.size)
 		for (i in menuText.indices) {

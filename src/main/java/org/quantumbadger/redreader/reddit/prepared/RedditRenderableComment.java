@@ -44,7 +44,12 @@ import org.quantumbadger.redreader.common.time.TimestampUTC;
 import org.quantumbadger.redreader.reddit.api.RedditAPICommentAction;
 import org.quantumbadger.redreader.reddit.kthings.RedditComment;
 import org.quantumbadger.redreader.reddit.kthings.RedditIdAndType;
+import org.quantumbadger.redreader.reddit.kthings.UrlEncodedString;
+import org.quantumbadger.redreader.reddit.prepared.bodytext.BodyElement;
+import org.quantumbadger.redreader.reddit.prepared.html.HtmlReader;
 import org.quantumbadger.redreader.reddit.things.RedditThingWithIdAndType;
+import org.quantumbadger.redreader.translation.TranslatableText;
+import org.quantumbadger.redreader.translation.TranslationContentType;
 
 import java.util.Observer;
 
@@ -59,6 +64,10 @@ public class RedditRenderableComment
 	private final boolean mShowSubreddit;
 	private final boolean mNeverAutoCollapse;
 	private boolean isBlockedUser = false;
+
+	@Nullable private TranslatableText mTranslation;
+	@Nullable private BodyElement mTranslatedBody;
+	@Nullable private String mTranslatedBodySource;
 
 	public RedditRenderableComment(
 			final RedditParsedComment comment,
@@ -573,8 +582,45 @@ public class RedditRenderableComment
 			final Float textSize,
 			final boolean showLinkButtons) {
 
-		return mComment.getBody()
-				.generateView(activity, textColor, textSize, showLinkButtons);
+		final BodyElement body;
+
+		final String translatedHtml = mTranslation != null && mTranslation.isShowingTranslation()
+				? mTranslation.getTranslated()
+				: null;
+
+		if(translatedHtml != null) {
+
+			if(mTranslatedBody == null || !translatedHtml.equals(mTranslatedBodySource)) {
+				mTranslatedBody = HtmlReader.parse(translatedHtml, activity);
+				mTranslatedBodySource = translatedHtml;
+			}
+
+			body = mTranslatedBody;
+
+		} else {
+			body = mComment.getBody();
+		}
+
+		return body.generateView(activity, textColor, textSize, showLinkButtons);
+	}
+
+	/**
+	 * @return The translation state of this comment's body.
+	 */
+	@NonNull
+	public TranslatableText getTranslation() {
+
+		if(mTranslation == null) {
+
+			final UrlEncodedString bodyHtml = mComment.getRawComment().getBody_html();
+
+			mTranslation = new TranslatableText(
+					bodyHtml == null ? "" : bodyHtml.getDecoded(),
+					true,
+					TranslationContentType.COMMENTS);
+		}
+
+		return mTranslation;
 	}
 
 	@Override

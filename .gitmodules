@@ -1,0 +1,6 @@
+[submodule "libs/redreader-translate/src/main/cpp/third_party/bergamot-translator"]
+	path = libs/redreader-translate/src/main/cpp/third_party/bergamot-translator
+	url = https://github.com/DavidVentura/bergamot-translator.git
+[submodule "libs/redreader-translate/src/main/cpp/third_party/cld2"]
+	path = libs/redreader-translate/src/main/cpp/third_party/cld2
+	url = https://github.com/CLD2Owners/cld2.git

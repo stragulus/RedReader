@@ -100,6 +100,19 @@
 						android:textSize="14sp"/>
 
 				<com.google.android.material.textview.MaterialTextView
+						android:id="@+id/reddit_post_translation"
+						android:layout_width="wrap_content"
+						android:layout_height="wrap_content"
+						android:textColor="#909090"
+						android:paddingLeft="10dp"
+						android:paddingRight="10dp"
+						android:paddingTop="2dp"
+						android:paddingBottom="1dp"
+						android:textSize="11sp"
+						android:visibility="gone"
+						tools:ignore="SmallSp"/>
+
+				<com.google.android.material.textview.MaterialTextView
 						android:id="@+id/reddit_post_subtitle"
 						android:layout_width="match_parent"
 						android:layout_height="wrap_content"

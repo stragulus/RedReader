@@ -1,0 +1,66 @@
+<?xml version="1.0" encoding="utf-8"?>
+
+<!--
+  ~ This file is part of RedReader.
+  ~
+  ~ RedReader is free software: you can redistribute it and/or modify
+  ~ it under the terms of the GNU General Public License as published by
+  ~ the Free Software Foundation, either version 3 of the License, or
+  ~ (at your option) any later version.
+  ~
+  ~ RedReader is distributed in the hope that it will be useful,
+  ~ but WITHOUT ANY WARRANTY; without even the implied warranty of
+  ~ MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+  ~ GNU General Public License for more details.
+  ~
+  ~ You should have received a copy of the GNU General Public License
+  ~ along with RedReader.  If not, see <http://www.gnu.org/licenses/>.
+  -->
+
+<!--
+	The language lists are populated in SettingsFragment, using language names
+	from java.util.Locale.
+-->
+<PreferenceScreen xmlns:android="http://schemas.android.com/apk/res/android">
+
+	<CheckBoxPreference
+			android:title="@string/pref_translation_enabled_title"
+			android:key="@string/pref_translation_enabled_key"
+			android:summary="@string/pref_translation_enabled_summary"
+			android:defaultValue="false"/>
+
+	<ListPreference
+			android:title="@string/pref_translation_primary_language_title"
+			android:key="@string/pref_translation_primary_language_key"
+			android:dialogTitle="@string/pref_translation_primary_language_title"
+			android:defaultValue="auto"/>
+
+	<MultiSelectListPreference
+			android:title="@string/pref_translation_secondary_languages_title"
+			android:key="@string/pref_translation_secondary_languages_key"
+			android:dialogTitle="@string/pref_translation_secondary_languages_title"/>
+
+	<MultiSelectListPreference
+			android:title="@string/pref_translation_content_title"
+			android:key="@string/pref_translation_content_key"
+			android:dialogTitle="@string/pref_translation_content_title"
+			android:entries="@array/pref_translation_content"
+			android:entryValues="@array/pref_translation_content_return"
+			android:defaultValue="@array/pref_translation_content_return"/>
+
+	<CheckBoxPreference
+			android:title="@string/pref_translation_wifi_only_title"
+			android:key="@string/pref_translation_wifi_only_key"
+			android:defaultValue="true"/>
+
+	<Preference
+			android:title="@string/pref_translation_models_title"
+			android:key="@string/pref_translation_models_key"
+			android:summary="@string/pref_translation_models_summary"/>
+
+	<CheckBoxPreference
+			android:title="@string/pref_translation_debug_fake_backend_title"
+			android:key="@string/pref_translation_debug_fake_backend_key"
+			android:defaultValue="false"/>
+
+</PreferenceScreen>

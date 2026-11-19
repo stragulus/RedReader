@@ -67,8 +67,12 @@ import org.quantumbadger.redreader.reddit.api.RedditPostActions;
 import org.quantumbadger.redreader.reddit.prepared.RedditChangeDataManager;
 import org.quantumbadger.redreader.reddit.prepared.RedditPreparedPost;
 import org.quantumbadger.redreader.reddit.prepared.RedditRenderableComment;
+import org.quantumbadger.redreader.reddit.prepared.bodytext.BodyElement;
+import org.quantumbadger.redreader.reddit.prepared.html.HtmlReader;
 import org.quantumbadger.redreader.reddit.url.RedditURLParser;
 import org.quantumbadger.redreader.views.AccessibilityActionManager;
+import org.quantumbadger.redreader.translation.TranslatableText;
+import org.quantumbadger.redreader.translation.TranslationIndicator;
 import org.quantumbadger.redreader.views.RedditCommentView;
 import org.quantumbadger.redreader.views.RedditPostHeaderView;
 import org.quantumbadger.redreader.views.RedditPostView;
@@ -499,16 +503,68 @@ public class CommentListingFragment extends RRFragment
 			layoutManager.scrollToPositionWithOffset(0, 0);
 
 			if(post.src.getSelfText() != null) {
-				final View selfText = post.src.getSelfText().generateView(
-						activity,
-						attr.rrMainTextCol,
-						13f * mSelfTextFontScale,
-						mShowLinkButtons);
+
+				final TranslatableText selfTextTranslation = post.getSelfTextTranslation();
+
+				if(selfTextTranslation != null) {
+					// This must happen before the self text is generated, as cached
+					// results are applied immediately
+					selfTextTranslation.requestAutoTranslation();
+				}
+
+				// Contains the translation indicator and the self text
+				final LinearLayout selfText = new LinearLayout(activity);
+				selfText.setOrientation(LinearLayout.VERTICAL);
 				selfText.setFocusable(false);
 
-				if(selfText instanceof ViewGroup) {
-					((ViewGroup)selfText).setDescendantFocusability(
-							ViewGroup.FOCUS_BLOCK_DESCENDANTS);
+				final TextView translationIndicator = TranslationIndicator.create(
+						activity,
+						attr.rrCommentHeaderCol,
+						11f * mSelfTextFontScale);
+
+				final FrameLayout selfTextHolder = new FrameLayout(activity);
+
+				selfText.addView(translationIndicator);
+				selfText.addView(selfTextHolder);
+
+				final Runnable updateSelfText = () -> {
+
+					final BodyElement body;
+
+					if(selfTextTranslation != null
+							&& selfTextTranslation.isShowingTranslation()) {
+
+						body = HtmlReader.parse(
+								selfTextTranslation.getDisplayText(),
+								activity);
+					} else {
+						body = post.src.getSelfText();
+					}
+
+					final View selfTextView = body.generateView(
+							activity,
+							attr.rrMainTextCol,
+							13f * mSelfTextFontScale,
+							mShowLinkButtons);
+
+					selfTextView.setFocusable(false);
+
+					if(selfTextView instanceof ViewGroup) {
+						((ViewGroup)selfTextView).setDescendantFocusability(
+								ViewGroup.FOCUS_BLOCK_DESCENDANTS);
+					}
+
+					selfTextHolder.removeAllViews();
+					selfTextHolder.addView(selfTextView);
+
+					TranslationIndicator.bind(translationIndicator, selfTextTranslation);
+				};
+
+				updateSelfText.run();
+
+				if(selfTextTranslation != null) {
+					// The post has the same lifetime as this fragment
+					selfTextTranslation.addListener(text -> updateSelfText.run());
 				}
 
 				final int paddingPx = General.dpToPixels(activity, 10);

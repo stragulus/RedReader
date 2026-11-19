@@ -32,6 +32,7 @@ import org.quantumbadger.redreader.cache.CacheManager;
 import org.quantumbadger.redreader.fragments.AccountListDialog;
 import org.quantumbadger.redreader.fragments.ChangelogDialog;
 
+import java.util.HashSet;
 import java.util.Set;
 
 public final class FeatureFlagHandler {
@@ -60,7 +61,8 @@ public final class FeatureFlagHandler {
 		DEFAULT_PREF_CUSTOM_TABS("defaultPrefCustomTabs"),
 		CROSSPOST_ORIGIN_MENU_ITEM("crosspostOriginMenuItem"),
 		MAIN_MENU_RANDOM_REMOVED("mainMenuRandomRemoved"),
-		POST_SUBTITLE_LOCKED_TAG("postSubtitleLockedTag");
+		POST_SUBTITLE_LOCKED_TAG("postSubtitleLockedTag"),
+		TRANSLATE_MENU_ITEMS("translateMenuItems");
 
 		@NonNull private final String id;
 
@@ -369,6 +371,41 @@ public final class FeatureFlagHandler {
 								context.getString(
 										R.string.pref_appearance_post_subtitle_items_key),
 								existingPostSubtitleItems)
+						.apply();
+			}
+
+			if(getAndSetFeatureFlag(prefs, FeatureFlag.TRANSLATE_MENU_ITEMS)
+					== FeatureFlagStatus.UPGRADE_NEEDED) {
+
+				Log.i(TAG, "Upgrading, add translate option to post and comment action menus.");
+
+				// Copy the set, as the one returned by SharedPreferences must not be modified
+				final Set<String> existingPostActionMenuItems = new HashSet<>(getStringSet(
+						R.string.pref_menus_post_context_items_key,
+						R.array.pref_menus_post_context_items_default,
+						context,
+						prefs));
+
+				existingPostActionMenuItems.add("translate");
+
+				// Copy the set, as the one returned by SharedPreferences must not be modified
+				final Set<String> existingCommentActionMenuItems = new HashSet<>(getStringSet(
+						R.string.pref_menus_comment_context_items_key,
+						R.array.pref_menus_comment_context_items_return,
+						context,
+						prefs));
+
+				existingCommentActionMenuItems.add("translate");
+
+				prefs.edit()
+						.putStringSet(
+								context.getString(
+										R.string.pref_menus_post_context_items_key),
+								existingPostActionMenuItems)
+						.putStringSet(
+								context.getString(
+										R.string.pref_menus_comment_context_items_key),
+								existingCommentActionMenuItems)
 						.apply();
 			}
 		});

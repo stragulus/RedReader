@@ -54,6 +54,9 @@ import org.quantumbadger.redreader.common.time.TimestampUTC;
 import org.quantumbadger.redreader.image.ThumbnailScaler;
 import org.quantumbadger.redreader.reddit.api.RedditPostActions;
 import org.quantumbadger.redreader.reddit.kthings.RedditIdAndType;
+import org.quantumbadger.redreader.reddit.kthings.UrlEncodedString;
+import org.quantumbadger.redreader.translation.TranslatableText;
+import org.quantumbadger.redreader.translation.TranslationContentType;
 import org.quantumbadger.redreader.views.RedditPostView;
 
 import java.io.IOException;
@@ -89,6 +92,9 @@ public final class RedditPreparedPost implements RedditChangeDataManager.Listene
 	private RedditPostView mBoundView = null;
 
 	@Nullable private InlinePreviewLoader mInlinePreviewLoader = null;
+
+	@Nullable private TranslatableText mTitleTranslation = null;
+	@Nullable private TranslatableText mSelfTextTranslation = null;
 
 	// TODO too many parameters
 	public RedditPreparedPost(
@@ -161,6 +167,114 @@ public final class RedditPreparedPost implements RedditChangeDataManager.Listene
 		}
 
 		return mInlinePreviewLoader;
+	}
+
+	/**
+	 * @return The translation state of the post title.
+	 */
+	@NonNull
+	@UiThread
+	public TranslatableText getTitleTranslation() {
+
+		if(mTitleTranslation == null) {
+			mTitleTranslation = new TranslatableText(
+					src.getTitle(),
+					false,
+					TranslationContentType.TITLES);
+		}
+
+		return mTitleTranslation;
+	}
+
+	/**
+	 * @return The translation state of the self text, or null if this post has no
+	 * parsed self text.
+	 */
+	@Nullable
+	@UiThread
+	public TranslatableText getSelfTextTranslation() {
+
+		if(mSelfTextTranslation == null) {
+
+			final UrlEncodedString selfTextHtml = src.getSrc().getSelftext_html();
+
+			if(src.getSelfText() == null || selfTextHtml == null) {
+				return null;
+			}
+
+			mSelfTextTranslation = new TranslatableText(
+					selfTextHtml.getDecoded(),
+					true,
+					TranslationContentType.SELF_TEXT);
+		}
+
+		return mSelfTextTranslation;
+	}
+
+	/**
+	 * @return The title, translated if a translation is being shown.
+	 */
+	@NonNull
+	@UiThread
+	public String getDisplayTitle() {
+
+		if(mTitleTranslation == null || !mTitleTranslation.isShowingTranslation()) {
+			return src.getTitle();
+		}
+
+		return mTitleTranslation.getDisplayText().replace('\n', ' ').trim();
+	}
+
+	/**
+	 * @return The label of the "Translate" action menu item, which depends on the
+	 * current translation state.
+	 */
+	@StringRes
+	@UiThread
+	public int getTranslateActionLabel() {
+
+		final TranslatableText title = getTitleTranslation();
+		final TranslatableText selfText = getSelfTextTranslation();
+
+		if(title.isShowingTranslation()
+				|| (selfText != null && selfText.isShowingTranslation())) {
+			return R.string.action_translation_show_original;
+
+		} else if(title.isTranslated() || (selfText != null && selfText.isTranslated())) {
+			return R.string.action_translation_show_translation;
+
+		} else {
+			return R.string.action_translate;
+		}
+	}
+
+	/**
+	 * Translates the title and self text, or switches between the translations and the
+	 * originals.
+	 */
+	@UiThread
+	public void onTranslateAction(@NonNull final Context context) {
+
+		final TranslatableText title = getTitleTranslation();
+		final TranslatableText selfText = getSelfTextTranslation();
+
+		if(title.isShowingTranslation()
+				|| (selfText != null && selfText.isShowingTranslation())) {
+
+			title.setShowingOriginal(true);
+
+			if(selfText != null) {
+				selfText.setShowingOriginal(true);
+			}
+
+		} else {
+			// Only show one message if translation isn't possible
+			title.requestUserTranslation(context, selfText == null);
+
+			if(selfText != null) {
+				selfText.requestUserTranslation(context, true);
+			}
+		}
 	}
 
 	public void performAction(final BaseActivity activity, final RedditPostActions.Action action) {
@@ -651,7 +765,7 @@ public final class RedditPreparedPost implements RedditChangeDataManager.Listene
 			a11yTitle.append(buildAccessibilityEmbellishments(context, headerMode));
 		}
 
-		a11yTitle.append(src.getTitle());
+		a11yTitle.append(getDisplayTitle());
 
 		// Append full stop so that subtitle doesn't become part of title
 		a11yTitle.append(".\n");

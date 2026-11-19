@@ -19,3 +19,6 @@ project(":redreader-common").projectDir = File("./libs/redreader-common")
 
 include(":redreader-datamodel")
 project(":redreader-datamodel").projectDir = File("./libs/redreader-datamodel")
+
+include(":redreader-translate")
+project(":redreader-translate").projectDir = File("./libs/redreader-translate")

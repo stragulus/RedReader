@@ -52,6 +52,8 @@ import org.quantumbadger.redreader.reddit.kthings.RedditComment;
 import org.quantumbadger.redreader.reddit.prepared.RedditChangeDataManager;
 import org.quantumbadger.redreader.reddit.prepared.RedditRenderableComment;
 import org.quantumbadger.redreader.reddit.url.UserProfileURL;
+import org.quantumbadger.redreader.translation.TranslatableText;
+import org.quantumbadger.redreader.translation.TranslationManager;
 import org.quantumbadger.redreader.views.RedditCommentView;
 
 import java.util.ArrayList;
@@ -82,7 +84,8 @@ public class RedditAPICommentAction {
 		CONTEXT,
 		GO_TO_COMMENT,
 		ACTION_MENU,
-		BACK
+		BACK,
+		TRANSLATE
 	}
 
 	private static class RCVMenuItem {
@@ -275,6 +278,27 @@ public class RedditAPICommentAction {
 					activity,
 					R.string.action_properties,
 					RedditCommentAction.PROPERTIES));
+		}
+
+		// The translation indicator is part of RedditCommentView, so translation is only
+		// offered when the comment is shown in one (i.e. not in the inbox)
+		if(itemPref.contains(RedditCommentAction.TRANSLATE)
+				&& commentView != null
+				&& TranslationManager.getInstance().isBackendAvailable()) {
+
+			final TranslatableText translation = comment.getTranslation();
+
+			final int titleRes;
+
+			if(translation.isShowingTranslation()) {
+				titleRes = R.string.action_translation_show_original;
+			} else if(translation.isTranslated()) {
+				titleRes = R.string.action_translation_show_translation;
+			} else {
+				titleRes = R.string.action_translate;
+			}
+
+			menu.add(new RCVMenuItem(activity, titleRes, RedditCommentAction.TRANSLATE));
 		}
 
 		final String[] menuText = new String[menu.size()];
@@ -543,6 +567,20 @@ public class RedditAPICommentAction {
 			case BACK:
 				activity.getOnBackPressedDispatcher().onBackPressed();
 				break;
+
+			case TRANSLATE: {
+				// Use the comment the menu was opened for: the view may have been
+				// recycled since. If it still shows this comment, it's updated by its
+				// listener.
+				final TranslatableText translation = renderableComment.getTranslation();
+
+				if(translation.isShowingTranslation()) {
+					translation.setShowingOriginal(true);
+				} else {
+					translation.requestUserTranslation(activity);
+				}
+				break;
+			}
 		}
 	}
 

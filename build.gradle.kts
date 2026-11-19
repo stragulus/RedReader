@@ -18,6 +18,7 @@ plugins {
 dependencies {
 	implementation(project(":redreader-common"))
 	implementation(project(":redreader-datamodel"))
+	implementation(project(":redreader-translate"))
 
 	coreLibraryDesugaring(libs.jdk.desugar)
 
