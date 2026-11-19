@@ -1,5 +1,7 @@
 @file:Suppress("UnstableApiUsage")
 
+import java.util.Properties
+
 plugins {
 	alias(libs.plugins.android.application)
 	alias(libs.plugins.kotlin.serialization)
@@ -94,8 +96,38 @@ android {
 		additionalParameters.add("--no-version-vectors")
 	}
 
+	// Optional release signing. Configure via a git-ignored keystore.properties in the project
+	// root (storeFile, storePassword, keyAlias, keyPassword) or the equivalent
+	// RR_SIGNING_STORE_FILE / RR_SIGNING_STORE_PASSWORD / RR_SIGNING_KEY_ALIAS /
+	// RR_SIGNING_KEY_PASSWORD environment variables. Without either, the release APK is
+	// left unsigned (as F-Droid and CI expect).
+	val signingProps = Properties().apply {
+		val file = rootProject.file("keystore.properties")
+		if (file.isFile) {
+			file.inputStream().use { load(it) }
+		}
+	}
+	fun signingValue(prop: String, env: String): String? =
+		signingProps.getProperty(prop) ?: System.getenv(env)
+
+	val releaseStoreFile = signingValue("storeFile", "RR_SIGNING_STORE_FILE")
+
+	if (releaseStoreFile != null) {
+		signingConfigs {
+			create("release") {
+				storeFile = file(releaseStoreFile.replaceFirst("~", System.getProperty("user.home")))
+				storePassword = signingValue("storePassword", "RR_SIGNING_STORE_PASSWORD")
+				keyAlias = signingValue("keyAlias", "RR_SIGNING_KEY_ALIAS")
+				keyPassword = signingValue("keyPassword", "RR_SIGNING_KEY_PASSWORD")
+			}
+		}
+	}
+
 	buildTypes {
 		getByName("release") {
+			if (releaseStoreFile != null) {
+				signingConfig = signingConfigs.getByName("release")
+			}
 			isMinifyEnabled = true
 			isShrinkResources = false
 			proguardFiles(

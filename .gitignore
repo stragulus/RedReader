@@ -86,3 +86,6 @@ reddit_auth.txt
 *.log
 *.har
 
+
+# Local release signing configuration
+keystore.properties
